@@ -16,9 +16,9 @@ type ItemType int
 
 // Item represents a string of a particular ItemType
 type Item struct {
-	typ ItemType
-	pos int
-	val string
+	Typ ItemType
+	Pos int
+	Val string
 }
 
 // Items is a convenience type for a list of Item
@@ -151,7 +151,7 @@ func (s *Scanner) AcceptSequence(valid string) bool {
 // NextItem returns the next Item from the input; called by parser
 func (s *Scanner) NextItem() Item {
 	item := <-s.items
-	s.lastPos = item.pos
+	s.lastPos = item.Pos
 	return item
 }
 
