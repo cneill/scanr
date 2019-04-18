@@ -26,21 +26,23 @@ type Items []Item
 
 // Scanner is used to emit items / tokens to be parsed by higher-level logic
 type Scanner struct {
-	input    string
-	state    StateFn
-	pos      int
-	start    int
-	width    int
-	lastPos  int
-	items    chan Item
-	lastItem Item
+	input     string
+	homeState StateFn
+	state     StateFn
+	pos       int
+	start     int
+	width     int
+	lastPos   int
+	items     chan Item
+	lastItem  Item
 }
 
 // NewScanner returns an initialized Scanner
-func NewScanner(start StateFn) *Scanner {
+func NewScanner(home StateFn) *Scanner {
 	s := &Scanner{
-		state: start,
-		items: make(chan Item),
+		homeState: home,
+		state:     home,
+		items:     make(chan Item),
 	}
 	return s
 }
@@ -162,6 +164,16 @@ func (s *Scanner) Drain() {
 // Ignore skips over the pending input before this point. - UNUSED FOR NOW
 func (s *Scanner) Ignore() {
 	s.start = s.pos
+}
+
+// IsSpace returns true if r is a space character
+func (s *Scanner) IsSpace(r rune) bool {
+	return r == ' '
+}
+
+// IsWhitespace returns true if r is a space character or tab character
+func (s *Scanner) IsWhitespace(r rune) bool {
+	return r == ' ' || r == '\t'
 }
 
 // IsQuote returns true if r is one of " ' `
