@@ -5,8 +5,8 @@ import (
 	"unicode/utf8"
 )
 
-// StateFn is a function used to transition between states in the Scanner
-type StateFn func(*Scanner) StateFn
+// StateFn is a function used to transition between states in the Scanr
+type StateFn func(*Scanr) StateFn
 
 // RuneFn is a function used to determine if a rune is in a given set of characters
 type RuneFn func(rune) bool
@@ -24,8 +24,8 @@ type Item struct {
 // Items is a convenience type for a list of Item
 type Items []Item
 
-// Scanner is used to emit items / tokens to be parsed by higher-level logic
-type Scanner struct {
+// Scanr is used to emit items / tokens to be parsed by higher-level logic
+type Scanr struct {
 	input     string
 	homeState StateFn
 	state     StateFn
@@ -37,9 +37,9 @@ type Scanner struct {
 	lastItem  Item
 }
 
-// NewScanner returns an initialized Scanner
-func NewScanner(home StateFn) *Scanner {
-	s := &Scanner{
+// NewScanr returns an initialized Scanr
+func NewScanr(home StateFn) *Scanr {
+	s := &Scanr{
 		homeState: home,
 		state:     home,
 		items:     make(chan Item),
@@ -48,7 +48,7 @@ func NewScanner(home StateFn) *Scanner {
 }
 
 // Run kicks off the scanner, starting with the first StateFn
-func (s *Scanner) Run(input string) {
+func (s *Scanr) Run(input string) {
 	s.input = input
 	for s.state != nil {
 		s.state = s.state(s)
@@ -56,7 +56,7 @@ func (s *Scanner) Run(input string) {
 }
 
 // Next returns the next rune in the input.
-func (s *Scanner) Next() rune {
+func (s *Scanr) Next() rune {
 	if s.pos >= len(s.input) {
 		s.width = 0
 		return eof
@@ -69,19 +69,19 @@ func (s *Scanner) Next() rune {
 }
 
 // Backup steps back one rune. Can only be called once per call of next.
-func (s *Scanner) Backup() {
+func (s *Scanr) Backup() {
 	s.pos -= s.width
 }
 
 // Peek returns but does not consume the next rune in the input.
-func (s *Scanner) Peek() rune {
+func (s *Scanr) Peek() rune {
 	r := s.Next()
 	s.Backup()
 	return r
 }
 
 // Emit passes an item to the items channel.
-func (s *Scanner) Emit(t ItemType) {
+func (s *Scanr) Emit(t ItemType) {
 	i := Item{t, s.start, s.input[s.start:s.pos]}
 	s.items <- i
 	s.lastItem = i
@@ -89,7 +89,7 @@ func (s *Scanner) Emit(t ItemType) {
 }
 
 // Accept consumes the next rune if it's from the valid set
-func (s *Scanner) Accept(valid string) bool {
+func (s *Scanr) Accept(valid string) bool {
 	if strings.ContainsRune(valid, s.Next()) {
 		return true
 	}
@@ -98,7 +98,7 @@ func (s *Scanner) Accept(valid string) bool {
 }
 
 // AcceptRun consumes a run of runes from the valid set
-func (s *Scanner) AcceptRun(valid string) int {
+func (s *Scanr) AcceptRun(valid string) int {
 	var length = 0
 	for strings.ContainsRune(valid, s.Next()) {
 		length++
@@ -108,7 +108,7 @@ func (s *Scanner) AcceptRun(valid string) int {
 }
 
 // AcceptUntil consumes to 'end' or eof; returns true if it accepts, false otherwise
-func (s *Scanner) AcceptUntil(end rune) bool {
+func (s *Scanr) AcceptUntil(end rune) bool {
 	if s.Peek() == end || s.Peek() == eof {
 		return false
 	}
@@ -119,7 +119,7 @@ func (s *Scanner) AcceptUntil(end rune) bool {
 }
 
 // AcceptWhileRuneFn consumes while 'fn' returns true
-func (s *Scanner) AcceptWhileRuneFn(fn RuneFn) bool {
+func (s *Scanr) AcceptWhileRuneFn(fn RuneFn) bool {
 	accepted := false
 	for r := s.Next(); fn(r) && r != eof; r = s.Next() {
 		accepted = true
@@ -129,7 +129,7 @@ func (s *Scanner) AcceptWhileRuneFn(fn RuneFn) bool {
 }
 
 // AcceptUntilRuneFn consumes until 'end' returns true
-func (s *Scanner) AcceptUntilRuneFn(end RuneFn) bool {
+func (s *Scanr) AcceptUntilRuneFn(end RuneFn) bool {
 	accepted := false
 	for r := s.Next(); !end(r) && r != eof; r = s.Next() {
 		// for r := s.peek(); !end(r) && r != eof; r = s.peek() {
@@ -140,7 +140,7 @@ func (s *Scanner) AcceptUntilRuneFn(end RuneFn) bool {
 }
 
 // AcceptSequence consumes a string if found & returns true, false if not
-func (s *Scanner) AcceptSequence(valid string) bool {
+func (s *Scanr) AcceptSequence(valid string) bool {
 	if strings.HasPrefix(s.input[s.pos:], valid) {
 		s.pos += len(valid)
 		return true
@@ -149,64 +149,64 @@ func (s *Scanner) AcceptSequence(valid string) bool {
 }
 
 // NextItem returns the next Item from the input; called by parser
-func (s *Scanner) NextItem() Item {
+func (s *Scanr) NextItem() Item {
 	item := <-s.items
 	s.lastPos = item.Pos
 	return item
 }
 
 // Drain runs through output so lexing goroutine exists; called by parser
-func (s *Scanner) Drain() {
+func (s *Scanr) Drain() {
 	for range s.items {
 	}
 }
 
 // Ignore skips over the pending input before this point. - UNUSED FOR NOW
-func (s *Scanner) Ignore() {
+func (s *Scanr) Ignore() {
 	s.start = s.pos
 }
 
 // IsSpace returns true if r is a space character
-func (s *Scanner) IsSpace(r rune) bool {
+func (s *Scanr) IsSpace(r rune) bool {
 	return r == ' '
 }
 
 // IsWhitespace returns true if r is a space character or tab character
-func (s *Scanner) IsWhitespace(r rune) bool {
+func (s *Scanr) IsWhitespace(r rune) bool {
 	return r == ' ' || r == '\t'
 }
 
 // IsQuote returns true if r is one of " ' `
-func (s *Scanner) IsQuote(r rune) bool {
+func (s *Scanr) IsQuote(r rune) bool {
 	return strings.ContainsRune("\"'`", r)
 }
 
 // IsNewline returns ture if r is one of \r or \n
-func (s *Scanner) IsNewline(r rune) bool {
+func (s *Scanr) IsNewline(r rune) bool {
 	return r == '\r' || r == '\n'
 }
 
 // IsAlphaLower returns true if r is between a and z
-func (s *Scanner) IsAlphaLower(r rune) bool {
+func (s *Scanr) IsAlphaLower(r rune) bool {
 	return r >= 'a' && r <= 'z'
 }
 
 // IsAlphaUpper returns true if r is between A and Z
-func (s *Scanner) IsAlphaUpper(r rune) bool {
+func (s *Scanr) IsAlphaUpper(r rune) bool {
 	return r >= 'A' && r <= 'Z'
 }
 
 // IsAlpha returns true if r is between a and z or A and Z
-func (s *Scanner) IsAlpha(r rune) bool {
+func (s *Scanr) IsAlpha(r rune) bool {
 	return s.IsAlphaLower(r) || s.IsAlphaUpper(r)
 }
 
 // IsNumber returns true if r is between 0 and 9
-func (s *Scanner) IsNumber(r rune) bool {
+func (s *Scanr) IsNumber(r rune) bool {
 	return r >= '0' && r <= '9'
 }
 
 // IsAlphaNum returns true if r is a letter or number
-func (s *Scanner) IsAlphaNum(r rune) bool {
+func (s *Scanr) IsAlphaNum(r rune) bool {
 	return s.IsAlphaLower(r) || s.IsAlphaUpper(r) || s.IsNumber(r)
 }
