@@ -9,11 +9,16 @@ func ScanSpace(s *Scanner) StateFn {
 
 // ScanNewline scans & emits a Newline of the variants "\n", "\r", and "\r\n"
 func ScanNewline(s *Scanner) StateFn {
-	if n := s.Next(); n == '\r' {
-		s.Accept("\n")
-	} else if n != '\n' {
+	n := s.Next()
+	if !s.IsNewline(n) {
 		s.Backup()
+		return s.homeState
 	}
+
+	if n == '\r' {
+		s.Accept("\n")
+	}
+
 	s.Emit(ItemNewline)
 	return s.homeState
 }
