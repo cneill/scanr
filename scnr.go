@@ -1,4 +1,4 @@
-package scnr
+package scanr
 
 import (
 	"strings"
