@@ -53,8 +53,8 @@ func (s *Scanner) Run(input string) {
 	}
 }
 
-// next returns the next rune in the input.
-func (s *Scanner) next() rune {
+// Next returns the next rune in the input.
+func (s *Scanner) Next() rune {
 	if s.pos >= len(s.input) {
 		s.width = 0
 		return eof
@@ -66,79 +66,79 @@ func (s *Scanner) next() rune {
 	return r
 }
 
-// backup steps back one rone. Can only be called once per call of next.
-func (s *Scanner) backup() {
+// Backup steps back one rune. Can only be called once per call of next.
+func (s *Scanner) Backup() {
 	s.pos -= s.width
 }
 
-// peek returns but does not consume the next rune in the input.
-func (s *Scanner) peek() rune {
-	r := s.next()
-	s.backup()
+// Peek returns but does not consume the next rune in the input.
+func (s *Scanner) Peek() rune {
+	r := s.Next()
+	s.Backup()
 	return r
 }
 
-// emit passes an item to the items channel.
-func (s *Scanner) emit(t ItemType) {
+// Emit passes an item to the items channel.
+func (s *Scanner) Emit(t ItemType) {
 	i := Item{t, s.start, s.input[s.start:s.pos]}
 	s.items <- i
 	s.lastItem = i
 	s.start = s.pos
 }
 
-// accept consumes the next rune if it's from the valid set
-func (s *Scanner) accept(valid string) bool {
-	if strings.ContainsRune(valid, s.next()) {
+// Accept consumes the next rune if it's from the valid set
+func (s *Scanner) Accept(valid string) bool {
+	if strings.ContainsRune(valid, s.Next()) {
 		return true
 	}
-	s.backup()
+	s.Backup()
 	return false
 }
 
-// acceptRun consumes a run of runes from the valid set
-func (s *Scanner) acceptRun(valid string) int {
+// AcceptRun consumes a run of runes from the valid set
+func (s *Scanner) AcceptRun(valid string) int {
 	var length = 0
-	for strings.ContainsRune(valid, s.next()) {
+	for strings.ContainsRune(valid, s.Next()) {
 		length++
 	}
-	s.backup()
+	s.Backup()
 	return length
 }
 
-// acceptUntil consumes to 'end' or eof; returns true if it accepts, false otherwise
-func (s *Scanner) acceptUntil(end rune) bool {
-	if s.peek() == end || s.peek() == eof {
+// AcceptUntil consumes to 'end' or eof; returns true if it accepts, false otherwise
+func (s *Scanner) AcceptUntil(end rune) bool {
+	if s.Peek() == end || s.Peek() == eof {
 		return false
 	}
-	for r := s.next(); r != end && r != eof; r = s.next() {
+	for r := s.Next(); r != end && r != eof; r = s.Next() {
 	}
-	s.backup()
+	s.Backup()
 	return true
 }
 
-// acceptWhileRuneFn consumes while 'fn' returns true
-func (s *Scanner) acceptWhileRuneFn(fn RuneFn) bool {
+// AcceptWhileRuneFn consumes while 'fn' returns true
+func (s *Scanner) AcceptWhileRuneFn(fn RuneFn) bool {
 	accepted := false
-	for r := s.next(); fn(r) && r != eof; r = s.next() {
+	for r := s.Next(); fn(r) && r != eof; r = s.Next() {
 		accepted = true
 	}
-	s.backup()
+	s.Backup()
 	return accepted
 }
 
-// acceptUntilRuneFn consumes until 'end' returns true
-func (s *Scanner) acceptUntilRuneFn(end RuneFn) bool {
+// AcceptUntilRuneFn consumes until 'end' returns true
+func (s *Scanner) AcceptUntilRuneFn(end RuneFn) bool {
 	accepted := false
-	for r := s.next(); !end(r) && r != eof; r = s.next() {
+	for r := s.Next(); !end(r) && r != eof; r = s.Next() {
 		// for r := s.peek(); !end(r) && r != eof; r = s.peek() {
 		accepted = true
 	}
-	s.backup()
+	s.Backup()
 	return accepted
 }
 
-// acceptSequence consumes a string if found & returns true, false if not
-func (s *Scanner) acceptSequence(valid string) bool {
+// AcceptSequence consumes a string if found & returns true, false if not
+func (s *Scanner) AcceptSequence(valid string) bool {
 	if strings.HasPrefix(s.input[s.pos:], valid) {
 		s.pos += len(valid)
 		return true
@@ -146,21 +146,21 @@ func (s *Scanner) acceptSequence(valid string) bool {
 	return false
 }
 
-// nextItem returns the next Item from the input; called by parser
-func (s *Scanner) nextItem() Item {
+// NextItem returns the next Item from the input; called by parser
+func (s *Scanner) NextItem() Item {
 	item := <-s.items
 	s.lastPos = item.pos
 	return item
 }
 
-// drain runs through output so lexing goroutine exists; called by parser
-func (s *Scanner) drain() {
+// Drain runs through output so lexing goroutine exists; called by parser
+func (s *Scanner) Drain() {
 	for range s.items {
 	}
 }
 
-// ignore skips over the pending input before this point. - UNUSED FOR NOW
-func (s *Scanner) ignore() {
+// Ignore skips over the pending input before this point. - UNUSED FOR NOW
+func (s *Scanner) Ignore() {
 	s.start = s.pos
 }
 
