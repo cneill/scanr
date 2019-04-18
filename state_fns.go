@@ -13,9 +13,7 @@ func ScanNewline(s *Scanner) StateFn {
 	if !s.IsNewline(n) {
 		s.Backup()
 		return s.homeState
-	}
-
-	if n == '\r' {
+	} else if n == '\r' {
 		s.Accept("\n")
 	}
 
