@@ -35,6 +35,8 @@ type Scanr struct {
 	lastPos   int
 	items     chan Item
 	lastItem  Item
+
+	scanningHostname bool
 }
 
 // NewScanr returns an initialized Scanr
@@ -155,6 +157,12 @@ func (s *Scanr) NextItem() Item {
 	return item
 }
 
+// PrevRune returns the last rune that was scanned
+func (s *Scanr) PrevRune() rune {
+	r, _ := utf8.DecodeRuneInString(s.input[s.pos-s.width:])
+	return r
+}
+
 // Drain runs through output so lexing goroutine exists; called by parser
 func (s *Scanr) Drain() {
 	for range s.items {
@@ -164,49 +172,4 @@ func (s *Scanr) Drain() {
 // Ignore skips over the pending input before this point. - UNUSED FOR NOW
 func (s *Scanr) Ignore() {
 	s.start = s.pos
-}
-
-// IsSpace returns true if r is a space character
-func (s *Scanr) IsSpace(r rune) bool {
-	return r == ' '
-}
-
-// IsWhitespace returns true if r is a space character or tab character
-func (s *Scanr) IsWhitespace(r rune) bool {
-	return r == ' ' || r == '\t'
-}
-
-// IsQuote returns true if r is one of " ' `
-func (s *Scanr) IsQuote(r rune) bool {
-	return strings.ContainsRune("\"'`", r)
-}
-
-// IsNewline returns ture if r is one of \r or \n
-func (s *Scanr) IsNewline(r rune) bool {
-	return r == '\r' || r == '\n'
-}
-
-// IsAlphaLower returns true if r is between a and z
-func (s *Scanr) IsAlphaLower(r rune) bool {
-	return r >= 'a' && r <= 'z'
-}
-
-// IsAlphaUpper returns true if r is between A and Z
-func (s *Scanr) IsAlphaUpper(r rune) bool {
-	return r >= 'A' && r <= 'Z'
-}
-
-// IsAlpha returns true if r is between a and z or A and Z
-func (s *Scanr) IsAlpha(r rune) bool {
-	return s.IsAlphaLower(r) || s.IsAlphaUpper(r)
-}
-
-// IsNumber returns true if r is between 0 and 9
-func (s *Scanr) IsNumber(r rune) bool {
-	return r >= '0' && r <= '9'
-}
-
-// IsAlphaNum returns true if r is a letter or number
-func (s *Scanr) IsAlphaNum(r rune) bool {
-	return s.IsAlphaLower(r) || s.IsAlphaUpper(r) || s.IsNumber(r)
 }
