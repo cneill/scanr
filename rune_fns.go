@@ -2,6 +2,9 @@ package scanr
 
 import "strings"
 
+// RuneFn is a function used to determine if a rune is in a given set of characters
+type RuneFn func(rune) bool
+
 // IsSpace returns true if r is a space character
 func IsSpace(r rune) bool {
 	return r == ' '

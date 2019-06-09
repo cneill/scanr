@@ -7,6 +7,8 @@ const (
 	ItemNewline                  // 3
 	ItemIP                       // 4
 	ItemHostname                 // 5
+	ItemURL
+	ItemWord
 )
 
 const (

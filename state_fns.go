@@ -2,6 +2,9 @@ package scanr
 
 import "fmt"
 
+// StateFn is a function used to transition between states in the Scanr
+type StateFn func(*Scanr) StateFn
+
 // ScanSpace scans & emits a run of space characters
 func ScanSpace(s *Scanr) StateFn {
 	s.AcceptWhileRuneFn(IsSpace)

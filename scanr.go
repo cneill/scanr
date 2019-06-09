@@ -5,24 +5,22 @@ import (
 	"unicode/utf8"
 )
 
-// StateFn is a function used to transition between states in the Scanr
-type StateFn func(*Scanr) StateFn
-
-// RuneFn is a function used to determine if a rune is in a given set of characters
-type RuneFn func(rune) bool
-
-// ItemType tells the parser what kind of Item this is
-type ItemType int
-
-// Item represents a string of a particular ItemType
-type Item struct {
-	Typ ItemType
-	Pos int
-	Val string
-}
-
-// Items is a convenience type for a list of Item
-type Items []Item
+/*
+TODO:
+- allow different state & emission paths for state functions - a generic "parse hostname" state fn might be used to JUST get that hostname and emit it; it might also be part of a URL parsing flow
+	- using state fns makes this hard - can't pass params easily?
+	- maybe have wrapper state fns, where specifying a "next" and "emit/noemit" is possible?
+	- without doing something like this ^ all state fns must be unique, even if they do the same things. multiple hostname parser functions, etc.
+	- if structs are used, it makes each "state fn" more cumbersome to construct, but gives more configurability; can include a function with bools for emit/noemit, perhaps a whole state chain with
+	  a custom emit type?
+    - I had "chains" of states like this in axe - perhaps look at that approach again? I didn't allow emit configurability there, merely ordering, so will have to figure that out
+- figure out how to test state fns - need to be able to do the Parse(), NextItem(), etc. bits all within a test
+- add more general-purpose state function building blocks that can be combined and rearranged for different purposes:
+	- "number" - i.e. int/float/imaginary/etc
+	- "word" - i.e. set of letters, separated by spaces
+	- URL
+	- quoted string
+*/
 
 // Scanr is used to emit items / tokens to be parsed by higher-level logic
 type Scanr struct {
@@ -36,6 +34,7 @@ type Scanr struct {
 	items     chan Item
 	lastItem  Item
 
+	// TODO: wtf
 	scanningHostname bool
 }
 
